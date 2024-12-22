@@ -24,6 +24,7 @@ def main():
     # Parameters
     # TODO: Add your parameters here. You might need to add other parameters as 
     # well.
+
     #channel_id = ...   # Your channel ID
     #Tb = ...           # Symbol width in seconds
     #fs = ...           # Sampling frequency in Hz
