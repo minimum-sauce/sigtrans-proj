@@ -1,87 +1,74 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import iirdesign, freqs, cheby1
+from scipy.signal import cheby1, freqz
 
-def design_chebyshev_bandpass_analog(
+def design_chebyshev1_bandpass(
+    order,
+    rp,
+    fs=44100,
     passband=(4750, 4850),
-    stopband=(4700, 4900),
-    gpass=1,      # Passband ripple in dB
-    gstop=60,     # Stopband attenuation in dB
 ):
     """
-    Designs an analog Chebyshev Type II bandpass filter with the given passband/stopband edges (in Hz).
-    Returns the filter's analog transfer function coefficients b (numerator) and a (denominator).
+    Designs a Chebyshev Type I bandpass filter of fixed order.
+
+    Parameters
+    ----------
+    order : int
+        The order of the Chebyshev filter.
+    rp : float
+        The maximum passband ripple in dB (Chebyshev ripple).
+    fs : float
+        Sampling frequency in Hz.
+    passband : tuple
+        Passband frequencies in Hz (f_low, f_high).
+
+    Returns
+    -------
+    b, a : ndarray
+        The IIR filter coefficients.
     """
-    # Convert from Hz to rad/s: ω (rad/s) = 2πf
-    wp = [2 * np.pi * f for f in passband]
-    ws = [2 * np.pi * f for f in stopband]
-    
-    # Design an analog Chebyshev Type II filter:
-    b, a = iirdesign(
-        wp=wp,         # passband edges in rad/s
-        ws=ws,         # stopband edges in rad/s
-        gpass=gpass,   # passband ripple (dB)
-        gstop=gstop,   # stopband attenuation (dB)
-        ftype='cheby1',
-        analog=True
-    )
+    # Compute normalized passband edges (0 to 1) with respect to Nyquist frequency
+    nyquist = fs / 2
+    f1, f2 = passband
+    Wn = [f1 / nyquist, f2 / nyquist]  # band edges in [0..1]
+
+    # Design the filter with cheby1
+    b, a = cheby1(order, rp, Wn, btype='band', analog=False, output='ba')
     return b, a
 
-def plot_filter_response_analog(b, a, passband=(4750, 4850), stopband=(4700, 4900), title='Analog Chebyshev Type II'):
+def plot_filter_response(b, a, fs=44100, passband=(4750, 4850), title='Fixed-Order Chebyshev Type I Bandpass'):
     """
-    Plots the frequency response (magnitude in dB) of the analog filter
-    on a linear frequency scale from 4400 Hz to 5200 Hz.
-    Also draws dashed lines for passband and stopband edges.
+    Plots the frequency response of the filter on a linear frequency scale.
+    Also draws vertical lines for the passband edges.
     """
-    # Create a linearly spaced range of angular frequencies (rad/s)
-    # from 4400 Hz to 5200 Hz (in terms of rad/s).
-    w = np.linspace(2 * np.pi * 4400, 2 * np.pi * 5200, 2000)
-    
-    # Evaluate the filter's analog frequency response
-    w, h = freqs(b, a, w)
-    
-    # Convert rad/s back to Hz for plotting
-    freqs_hz = w / (2 * np.pi)
-    
+    w, h = freqz(b, a, worN=2048)
+    freqs = w * fs / (2 * np.pi)  # Convert from rad/sample to Hz
+
     plt.figure(figsize=(8, 5))
-    
-    # Plot filter magnitude (in dB)
-    plt.plot(freqs_hz, 20 * np.log10(np.abs(h)), label='Magnitude Response')
-    
-    # Draw dashed lines for passband edges (in green)
-    plt.axvline(x=passband[0], color='green', linestyle='--', linewidth=1, label='Passband Edges')
-    plt.axvline(x=passband[1], color='green', linestyle='--', linewidth=1)
-    
-    # Draw dashed lines for stopband edges (in red)
-    plt.axvline(x=stopband[0], color='red', linestyle='--', linewidth=1, label='Stopband Edges')
-    plt.axvline(x=stopband[1], color='red', linestyle='--', linewidth=1)
-    
+    plt.plot(freqs, 20 * np.log10(np.abs(h)), label='Magnitude Response')
+
+    # Draw dashed lines for passband edges (green)
+    plt.axvline(x=passband[0], color='green', linestyle='--', label='Passband Edges')
+    plt.axvline(x=passband[1], color='green', linestyle='--')
+
     plt.title(title)
     plt.xlabel('Frequency (Hz)')
     plt.ylabel('Magnitude (dB)')
-    
-    # Set the y-limits to see enough attenuation
-    plt.ylim([-100, 5])
-    # Restrict x-axis to [4400, 5200] on a linear scale
-    plt.xlim([4400, 5200])
-    
+    plt.ylim([-80, 5])
+    plt.xlim([4600, 5000])  # Just to see the region around the band
     plt.grid(True)
     plt.legend()
     plt.show()
 
 if __name__ == "__main__":
-    # Define passband and stopband in Hz
+    # User-defined parameters
+    fs = 44100
     passband = (4750, 4850)
-    stopband = (4700, 4900)
+    order = 6      # Try changing this to see how it affects steepness & ripple
+    rp = 1.0       # Passband ripple in dB
 
-    # Design the analog filter
-    b, a = design_chebyshev_bandpass_analog(
-        passband=passband,
-        stopband=stopband,
-        gpass=1,   # 1 dB ripple in passband
-        gstop=60   # 60 dB attenuation in stopband
-    )
+    # Design the filter
+    b, a = design_chebyshev1_bandpass(order, rp, fs, passband)
 
-    # Plot its frequency response from 4400 Hz to 5200 Hz
-    plot_filter_response_analog(b, a, passband=passband, stopband=stopband,
-                                title='Analog Chebyshev Type I (4750-4850 Hz)')
+    # Plot its response
+    plot_filter_response(b, a, fs, passband, title=f'Chebyshev I Bandpass (Order={order}, rp={rp} dB)')
