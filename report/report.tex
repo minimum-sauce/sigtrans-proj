@@ -1,0 +1,260 @@
+\documentclass[12pt, a4paper]{article}
+%\usepackage[swedish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{fullpage}
+\usepackage{graphicx}
+\usepackage[fleqn]{amsmath}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{parskip}
+\usepackage{amsmath,amsfonts,amsthm, bm}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage[font={footnotesize,it}]{caption}
+\usepackage{subcaption}
+\usepackage{fancyref}
+\usepackage{gensymb}
+\usepackage{setspace}   
+\usepackage{lipsum} 
+\usepackage{gensymb}
+\usepackage{xcolor}
+\usepackage[export]{adjustbox}
+\usepackage[utf8]{inputenc}
+\usepackage{csquotes}
+\usepackage[backend=bibtex,style=verbose-trad2]{biblatex}
+
+%Från share latex
+%\documentclass[12pt, a4paper]{article}
+%\usepackage[swedish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{fullpage}
+\usepackage{graphicx}
+\usepackage[fleqn]{amsmath}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage[font={footnotesize,it}]{caption}
+\usepackage{subcaption}
+\usepackage{fancyref}
+\usepackage{gensymb}
+\usepackage{setspace}   
+\usepackage{lipsum} 
+\usepackage{minted}
+\usepackage{gensymb}
+\usepackage[export]{adjustbox}
+\usepackage[utf8]{inputenc}
+\usepackage{csquotes}
+\documentclass{article}
+\usepackage{enumitem,amssymb}
+\newlist{todolist}{itemize}{2}
+\setlist[todolist]{label=$\square$}
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+\newcommand{\done}{\rlap{$\square$}{\raisebox{2pt}{\large\hspace{1pt}\cmark}}%
+\hspace{-2.5pt}}
+\newcommand{\wontfix}{\rlap{$\square$}{\large\hspace{1pt}\xmark}}
+
+
+\DeclareMathSizes{12}{15}{11}{6}
+%Den tredje är understreck_bokstav storlek
+%Den andra är storleken
+
+
+\begin{document}
+\pagenumbering{gobble}
+\begin{titlepage}
+\centering
+	\onehalfspacing
+	\includegraphics[width=0.3\textwidth]{Logga_UU.png}\par\vspace{1cm}
+	\vspace{0cm}
+    \begin{spacing}{0.5}
+
+
+	{\scshape\Large Signals and Transforms \par}
+	\ignorespaces
+	{\fontsize{50}{60}\bfseries Project\par}
+	
+    \end{spacing}
+
+\vspace{2cm}
+\begin{center}
+Vladislav Bertilsson | Gustav Fridén | Felix Ljungkvist | Anton Nordström\\ 
+\vspace{1 cm}
+\end{center}
+\vspace{2 cm}
+    {\large\today \par}
+    {\normalsize }
+	\vfill
+
+\end{titlepage}
+
+\newpage
+\section{Summarize} 
+
+\newpage\tableofcontents
+
+\pagenumbering{arabic}
+\section{Summary}
+\section{Introduction}
+\section{Theory}
+
+a.) The modulated signal $x_m [k]$ can be expressed as:
+\newline
+$$
+x_{m}[k]=x_{b}[k] x_{c}[k]=x_{b}[k] A_{c} \sin \left(\Omega_{c} k\right)
+$$
+
+Where $\Omega_{c} = 2 \pi \cdot fb$ where the fb is the frequency band given to our group is 3475-3525 Hz. This leads to $\Omega_{c} = 7000 \cdot \pi$.
+\newline
+We want $x_{m}[k]$ to be continuous because its easier to perform the calculations on a continuous time signal.  We also know that:
+$$
+x_m(t) = 
+\left\{\begin{array}{ll}
+-A_{c} \sin \left(\omega_{c} k\right) & x_{b}(t)=-1 \\
+A_{c} \sin \left(\omega_{c} k\right) & x_{b}(t)=1
+\end{array}\right.
+$$
+Our signal of bit streams $x_b(t)$ can be described as a sum of rectangular pulses of width $T_b$. This leads to:
+$$
+x_b(t)=\operatorname{rect}\left(\frac{t}{T_{0}}\right)
+$$
+To get the complete signal $x_m(t)$ we multiply the carrier signal $x_c(t)$ with our bit stream signal $x_b(t)$.
+We get the complete signal:
+$$
+x_m(t) = \operatorname{rect}\left(\frac{t}{T_{0}}\right) \cdot A_{c} \sin \left(\omega_{c} k\right)
+$$
+We can use fourier transform to get the spectrum of the signal $x_m(t)$. We set $A_c = 1$ for now:
+$$
+X_m(\omega) = T_0 sinc(\frac{\omega T_0}{2 \pi}) * \frac{1}{2 \pi} \pi [\delta(\omega + \omega _c)+\delta(\omega - \omega _c)] $$
+$$
+= \frac{1}{2} T_0 sinc(\frac{\omega T_0 }{2 \pi} - \omega _c) +  \frac{1}{2} T_0 sinc(\frac{\omega T_0 }{2 \pi} + \omega _c) 
+$$
+b) The frequency band given to our group was 4750–4850 Hz. This band has a peak at 4800 Hz. Therefore we choose a carrier frequency of 4800 Hz as our carrier frequency.
+
+We set Tb equal to 0.01s because we have a frequency range of 100hz, and tb = 1/100. The bit rate is then 1/tb = 100 bits/ second
+
+c.) Our group was given a maximum avarage power of 30 dBm. We have to choose a value of $A_c$ that fulfills this condition. We know that:
+ \[
+   P = 10^{\frac{P_{\text{dBm}}}{10}} \, \text{mW} = 10^{\frac{30}{10}} \, \text{mW} = 1000 \, \text{mW} = 1 \, \text{W}
+   \]
+Given the carrier signal \( x(t) = A_c \sin(\omega_0 t + \varphi) \), the average power \( P \) is given by:
+   \[
+   P = \frac{A_c^2}{2}
+   \]
+   Setting \( P = 1 \, \text{W} \):
+   \[
+   \frac{A_c^2}{2} = 1
+   \]
+   Solving for \( A_c \):
+   \[
+   A_c = \sqrt{2} \approx 1.414
+   \]
+d.)
+Given the expressions:
+\begin{align*}
+y_{I,d}(t) &= y_m(t) \cos(\omega_c t) = A_r y_b(t - t_0) \sin(\omega_c t + \phi_r) \cos(\omega_c t), \\
+y_{Q,d}(t) &= -y_m(t) \sin(\omega_c t) = -A_r y_b(t - t_0) \sin(\omega_c t + \phi_r) \sin(\omega_c t).
+\end{align*}
+We aim to simplify these expressions by eliminating the products between sine and cosine terms.
+\subsection*{Simplifying \( y_{I,d}(t) \)}
+First, expand \(\sin(\omega_c t + \phi_r)\) using the identity:
+\[
+\sin(\omega_c t + \phi_r) = \sin(\omega_c t) \cos(\phi_r) + \cos(\omega_c t) \sin(\phi_r).
+\]
+Substitute back into \( y_{I,d}(t) \):
+\begin{align*}
+y_{I,d}(t) &= A_r y_b(t - t_0) \left[ \sin(\omega_c t) \cos(\phi_r) + \cos(\omega_c t) \sin(\phi_r) \right] \cos(\omega_c t) \\
+&= A_r y_b(t - t_0) \left[ \cos(\phi_r) \sin(\omega_c t) \cos(\omega_c t) + \sin(\phi_r) \cos^2(\omega_c t) \right].
+\end{align*}
+Next, use the trigonometric identities:
+\[
+\sin(\omega_c t) \cos(\omega_c t) = \tfrac{1}{2} \sin(2\omega_c t), \quad \cos^2(\omega_c t) = \tfrac{1}{2} [1 + \cos(2\omega_c t)].
+\]
+Applying these identities:
+\begin{align*}
+y_{I,d}(t) &= A_r y_b(t - t_0) \left[ \cos(\phi_r) \left( \tfrac{1}{2} \sin(2\omega_c t) \right) + \sin(\phi_r) \left( \tfrac{1}{2} [1 + \cos(2\omega_c t)] \right) \right] \\
+&= \tfrac{A_r}{2} y_b(t - t_0) \left[ \cos(\phi_r) \sin(2\omega_c t) + \sin(\phi_r) + \sin(\phi_r) \cos(2\omega_c t) \right].
+\end{align*}
+Combine terms using the identity:
+\[
+\cos(\phi_r) \sin(2\omega_c t) + \sin(\phi_r) \cos(2\omega_c t) = \sin(2\omega_c t + \phi_r).
+\]
+Therefore:
+\[
+y_{I,d}(t) = \tfrac{A_r}{2} y_b(t - t_0) \left[ \sin(\phi_r) + \sin(2\omega_c t + \phi_r) \right].
+\]
+\subsection*{Simplifying \( y_{Q,d}(t) \)}
+Use the identity for the product of sines:
+\[
+\sin(A) \sin(B) = \tfrac{1}{2} [\cos(A - B) - \cos(A + B)].
+\]
+Applying this to \( y_{Q,d}(t) \):
+\begin{align*}
+y_{Q,d}(t) &= -A_r y_b(t - t_0) \sin(\omega_c t + \phi_r) \sin(\omega_c t) \\
+&= -A_r y_b(t - t_0) \left[ \tfrac{1}{2} \cos(\omega_c t - (\omega_c t + \phi_r)) - \tfrac{1}{2} \cos(\omega_c t + (\omega_c t + \phi_r)) \right] \\
+&= -\tfrac{A_r}{2} y_b(t - t_0) \left[ \cos(-\phi_r) - \cos(2\omega_c t + \phi_r) \right].
+\end{align*}
+Since \(\cos(-\phi_r) = \cos(\phi_r)\), this simplifies to:
+\[
+y_{Q,d}(t) = -\tfrac{A_r}{2} y_b(t - t_0) \left[ \cos(\phi_r) - \cos(2\omega_c t + \phi_r) \right].
+\]
+\subsection*{Spectra of \( Y_{I,d}(\omega) \) and \( Y_{Q,d}(\omega) \)}
+The expressions show that \( y_{I,d}(t) \) and \( y_{Q,d}(t) \) contain two components:
+\begin{itemize}
+    \item \textbf{Baseband Component}:
+    \begin{align*}
+    y_{I,d}^{\text{BB}}(t) &= \tfrac{A_r}{2} y_b(t - t_0) \sin(\phi_r), \\
+    y_{Q,d}^{\text{BB}}(t) &= -\tfrac{A_r}{2} y_b(t - t_0) \cos(\phi_r).
+    \end{align*}
+    \item \textbf{Component at \( 2\omega_c \)}:
+    \begin{align*}
+    y_{I,d}^{2\omega_c}(t) &= \tfrac{A_r}{2} y_b(t - t_0) \sin(2\omega_c t + \phi_r), \\
+    y_{Q,d}^{2\omega_c}(t) &= \tfrac{A_r}{2} y_b(t - t_0) \cos(2\omega_c t + \phi_r).
+    \end{align*}
+\end{itemize}
+
+e.)
+While it might seem sufficient to recover the baseband signal $y_b(t - t_0)$ by low-pass filtering either $y_{I,d}(t)$ or $y_{Q,d}(t)$ to eliminate the $2\omega_c$ components, this is ineffective because the baseband amplitudes in these signals depend on the unknown phase $\phi_r$. Specifically, the baseband component in $y_{I,d}(t)$ is scaled by $\sin(\phi_r)$, and in $y_{Q,d}(t)$ by $-\cos(\phi_r)$. Without precise knowledge of $\phi_r$, which may vary over time, relying on a single signal could result in significant signal attenuation or complete loss (e.g., when $\sin(\phi_r) = 0$ or $\cos(\phi_r) = 0$), making it unreliable to extract $y_b(t - t_0)$ from just one of the two signals.
+
+
+\section{Results and Discussion}
+\section{Conclussions}
+\begin{thebibliography}{9}
+
+\bibitem{latexcompanion} 
+Michel Goossens, Frank Mittelbach, and Alexander Samarin. 
+\textit{The \LaTeX\ Companion}. 
+Addison-Wesley, Reading, Massachusetts, 1993.
+
+\bibitem{einstein} 
+Albert Einstein. 
+\textit{Zur Elektrodynamik bewegter K{\"o}rper}. (German) 
+[\textit{On the electrodynamics of moving bodies}]. 
+Annalen der Physik, 322(10):891–921, 1905.
+
+\bibitem{knuthwebsite} 
+Knuth: Computers and Typesetting,
+\\\texttt{http://www-cs-faculty.stanford.edu/\~{}uno/abcde.html}
+
+
+
+\bibitem{Grout} 
+Ian Grout. 
+\textit{Digital Systems Design with FPGAs and CPLDs}, 2008.
+\\\texttt{https://www.sciencedirect.com/topics/engineering/iir-filters}
+
+\end{thebibliography}
+
+\end{document}
