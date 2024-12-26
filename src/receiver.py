@@ -40,6 +40,9 @@ def main():
     y_rec = sd.rec(int(record_time * fs), samplerate=fs, channels=1, blocking=True)
     print("Done recording.")
 
+    # Uncomment this to test that the microphone is capturing the same played signal
+    #sd.play(y_rec, samplerate=fs, blocking=True)
+
     # Reshape from (N,1) -> (N,)
     y_rec = y_rec.flatten()
 
