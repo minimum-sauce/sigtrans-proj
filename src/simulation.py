@@ -18,7 +18,7 @@ import numpy as np
 from scipy import signal
 import matplotlib.pyplot as plt
 import wcslib as wcs
-from plotfilter import design_lowpass_filter, design_passband_filter, design_chebyshev1_bandpass, design_chebyshev1_lowpass
+import filters
 
 def main():
     # -------------------------------------------------------------------------
@@ -62,7 +62,7 @@ def main():
     # (B1) Baseband-only decode test (NO channel, NO filters):
     #      Convert xb to complex so decode_baseband_signal sees phase flips.
     # -------------------------------------------------------------------------
-    yr_c = xb.astype(np.complex128)  # Make it complex: +1 -> phase=0, -1 -> phase=π
+    yr_c = xb#.astype(np.complex128)  # Make it complex: +1 -> phase=0, -1 -> phase=π
 
     # Decode baseband
     br = wcs.decode_baseband_signal(np.abs(yr_c), np.angle(yr_c), Tb, fs)
@@ -76,7 +76,13 @@ def main():
     x_mod = xb * np.cos(2.0 * np.pi * fc * n / fs)
 
     # 2) Bandpass filter
-    b_bp, a_bp = design_chebyshev1_bandpass(bp_order, bp_rp, fs, passband=(4750, 4850))
+    wp_bp = [4750.0, 4850.0]
+    ws_bp = [4700.0, 4900.0]
+    gpass = 1
+    gstop = 40
+
+    b_bp, a_bp = filters.design_passband_filter(wp_bp, ws_bp, gpass, gstop, fs)
+    #b_bp, a_bp = filters.design_chebyshev1_bandpass(bp_order, bp_rp, fs, passband=(4750, 4850))
     #b_bp, a_bp = design_passband_filter(fs=fs)
     xt = signal.lfilter(b_bp, a_bp, x_mod)  # Transmitted signal
 
@@ -93,16 +99,19 @@ def main():
 
     # IQ demod
     n_r = np.arange(len(yr_f))
-    yI_d = yr_f * np.cos(2.0 * np.pi * fc * n_r / fs)
-    yQ_d = -yr_f * np.sin(2.0 * np.pi * fc * n_r / fs)
+    yI_d = np.array(yr_f) * np.cos(2.0 * np.pi * fc * n_r / fs)
+    yQ_d = -np.array(yr_f) * np.sin(2.0 * np.pi * fc * n_r / fs)
 
     # Lowpass each branch
-    b_lp, a_lp = design_chebyshev1_lowpass(order=lp_order, rp=lp_rp, fs=fs, cutoff=cutoff)
+    wp_lp = 30
+    ws_lp = 80
+    b_lp, a_lp = filters.design_lowpass_filter(wp_lp, ws_lp, gpass, gstop, fs)
+    #b_lp, a_lp = filters.design_chebyshev1_lowpass(order=lp_order, rp=lp_rp, fs=fs, cutoff=cutoff)
     yI_b = signal.lfilter(b_lp, a_lp, yI_d)
     yQ_b = signal.lfilter(b_lp, a_lp, yQ_d)
 
     # Form complex baseband
-    yb = yI_b + 1j * yQ_b
+    yb = np.array(yI_b) + 1j * np.array(yQ_b)
 
     # Decode baseband -> bits -> text
     br = wcs.decode_baseband_signal(np.abs(yb), np.angle(yb), Tb, fs)
