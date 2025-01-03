@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 import wcslib as wcs
 import filters
 
-def main():
+def simulation():
     # -------------------------------------------------------------------------
     # (A) Define your main system parameters
     # -------------------------------------------------------------------------
@@ -115,9 +115,27 @@ def main():
 
     # Decode baseband -> bits -> text
     br = wcs.decode_baseband_signal(np.abs(yb), np.angle(yb), Tb, fs)
+
     data_rx = wcs.decode_string(br)
+    # Code for calculating bit error rate
+    char_errors = 0
+    min_len = min(len(data), len(data_rx))
+
+    # Compare up to the shorter length
+    for i in range(min_len):
+        if data[i] != data_rx[i]:
+            char_errors += 1
+
+    # If there's a length mismatch, count the extra characters as errors too
+    char_errors += abs(len(data) - len(data_rx))
+
+    # Compute a "character error rate" by dividing by the length of the original data
+    total_chars = len(data)
+    char_error_rate = char_errors / total_chars if total_chars > 0 else 0.0
+
+    print(f"Char errors: {char_errors}, total chars: {total_chars}, CER: {char_error_rate:.6f}")
     print('Received: ' + data_rx)
 
 
 if __name__ == "__main__":
-    main()
+    simulation()
