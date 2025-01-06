@@ -56,7 +56,7 @@ def main():
     # -------------------- (D) Up-Convert & Bandpass Filter -------------------
     n = np.arange(len(xb))
     x_mod = xb * np.cos(2.0 * np.pi * fc * n / fs)   # Real up-conversion
-    sos = design_chebyshev1_bandpass(bp_order, bp_rp, fs, passband)
+    sos = design_passband_filter()
     x_tx = signal.sosfilt(sos, x_mod)         # Final transmit signal
 
     # ---------------------- (E) Play Out via Sounddevice ---------------------
