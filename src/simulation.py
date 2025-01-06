@@ -82,12 +82,13 @@ def simulation():
     gpass = 0.5
     gstop = 40
 
-    b_bp, a_bp = filters.design_passband_filter(wp_bp, ws_bp, gpass, gstop, fs)
-    plot_filter_response(b_bp, a_bp, fs, passband=wp_bp, stopband=ws_bp, gpass=gpass, gstop=gstop)
+    sos_bp = filters.design_passband_filter(wp_bp, ws_bp, gpass, gstop, fs)
+    #plot_filter_response(b_bp, a_bp, fs, passband=wp_bp, stopband=ws_bp, gpass=gpass, gstop=gstop)
     
     #b_bp, a_bp = filters.design_chebyshev1_bandpass(bp_order, bp_rp, fs, passband=(4750, 4850))
     #b_bp, a_bp = design_passband_filter(fs=fs)
-    xt = signal.lfilter(b_bp, a_bp, x_mod)  # Transmitted signal
+    #xt = signal.lfilter(b_bp, a_bp, x_mod)  # Transmitted signal
+    xt = signal.sosfilt(sos_bp, x_mod)
 
     # -------------------------------------------------------------------------
     # (D) CHANNEL SIMULATION
@@ -98,7 +99,8 @@ def simulation():
     # -------------------------------------------------------------------------
     # (E) RECEIVER: Band-limiting -> IQ demod -> Lowpass -> Decode
     # -------------------------------------------------------------------------
-    yr_f = signal.lfilter(b_bp, a_bp, yr)
+    #yr_f = signal.soslfilter(b_bp, a_bp, yr)
+    yr_f = signal.sosfilt(sos_bp, yr)
 
     # IQ demod
     n_r = np.arange(len(yr_f))
@@ -108,10 +110,10 @@ def simulation():
     # Lowpass each branch
     wp_lp = 30
     ws_lp = 80
-    b_lp, a_lp = filters.design_lowpass_filter(wp_lp, ws_lp, gpass, gstop, fs)
+    sos_lp = filters.design_lowpass_filter(wp_lp, ws_lp, gpass, gstop, fs)
     #b_lp, a_lp = filters.design_chebyshev1_lowpass(order=lp_order, rp=lp_rp, fs=fs, cutoff=cutoff)
-    yI_b = signal.lfilter(b_lp, a_lp, yI_d)
-    yQ_b = signal.lfilter(b_lp, a_lp, yQ_d)
+    yI_b = signal.sosfilt(sos_lp, yI_d)
+    yQ_b = signal.sosfilt(sos_lp, yQ_d)
 
     # Form complex baseband
     yb = np.array(yI_b) + 1j * np.array(yQ_b)
