@@ -1,7 +1,7 @@
 from warnings import filters
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import cheby1, freqz, freqz_zpk
+from scipy.signal import sosfreqz
 
 from filters import *
 
@@ -9,12 +9,12 @@ from filters import *
 
 
 
-def plot_lowpass_filter_response_logscale(b, a, fs=10000.0, passband=50, stopband=70, rp=1.0, As=40):
+def plot_lowpass_filter_response_logscale(sos, fs=10000.0, passband=50, stopband=70, rp=1.0, As=40):
     """
     Plots the frequency response of the filter on a *logarithmic* frequency scale.
     passband and stopband are just used for reference lines.
     """
-    w, h = freqz(b, a, worN=2048)
+    w, h = sosfreqz(sos, worN=2048)
     freqs = w * fs / (2.0 * np.pi)  # Convert rad/sample to Hz
 
     plt.figure(figsize=(8, 5))
@@ -43,8 +43,8 @@ def plot_lowpass_filter_response_logscale(b, a, fs=10000.0, passband=50, stopban
     Plots the frequency response of the filter on a linear frequency scale.
     Also draws vertical lines for the passband edges.
 """
-def plot_filter_response(b, a, fs=10000.0, passband=(4750, 4850), stopband=(4700, 4900), title="Filter Response"):
-    w, h = freqz(b, a, worN=2048)  # Compute frequency response
+def plot_filter_response(sos, fs=10000.0, passband=(4750, 4850), stopband=(4700, 4900), title="Filter Response", gpass = 1.0, gstop = 40.0):
+    w, h = sosfreqz(sos, worN=2048)  # Compute frequency response
     freqs = w * fs / (2.0 * np.pi)  # Convert rad/sample to Hz
     plt.figure(figsize=(8, 5))
     plt.semilogx(freqs, 20 * np.log10(np.abs(h)), label="Magnitude Response")
@@ -81,13 +81,13 @@ if __name__ == "__main__":
     fs = 10000.0
     wp = [4750.0, 4850.0]
     ws = [4700.0, 4900.0]
-    gpass = 3
+    gpass = 0.5
     gstop = 40
 
-    b, a = design_passband_filter(wp, ws, gpass, gstop, fs)
+    sos = design_passband_filter(wp, ws, gpass, gstop, fs)
     # Plot its response
     #plot_filter_response(b, a, fs, passband, stopband, title=f'Chebyshev I Bandpass (Order={order}, rp={rp} dB)')
-    plot_filter_response(b, a, fs, passband=wp, stopband=ws)
+    plot_filter_response(sos, fs, passband=wp, stopband=ws)
 
 
     #---------------------------------------------------------------------------
@@ -96,5 +96,5 @@ if __name__ == "__main__":
     passband = 50     # pass up to ~50 Hz in baseband
     stopband = 75      # stopband starts at ~70 Hz
 
-    b, a = design_passband_filter(passband, stopband, gpass, gstop, fs)
-    plot_lowpass_filter_response_logscale(b, a, fs, passband=passband, stopband=stopband, rp=gpass, As=gstop)
+    sos = design_lowpass_filter(passband, stopband, gpass, gstop, fs)
+    plot_lowpass_filter_response_logscale(sos, fs, passband=passband, stopband=stopband, rp=gpass, As=gstop)

@@ -13,12 +13,13 @@ $ python3 simulation.py -b 010010000110100100100001
 2020-present -- Roland Hostettler <roland.hostettler@angstrom.uu.se>
 """
 
-import sys
+import sys 
 import numpy as np
 from scipy import signal
 import matplotlib.pyplot as plt
 import wcslib as wcs
 import filters
+from plotfilter import plot_filter_response
 
 def simulation():
     # -------------------------------------------------------------------------
@@ -78,10 +79,12 @@ def simulation():
     # 2) Bandpass filter
     wp_bp = [4750.0, 4850.0]
     ws_bp = [4700.0, 4900.0]
-    gpass = 1
+    gpass = 0.5
     gstop = 40
 
     b_bp, a_bp = filters.design_passband_filter(wp_bp, ws_bp, gpass, gstop, fs)
+    plot_filter_response(b_bp, a_bp, fs, passband=wp_bp, stopband=ws_bp, gpass=gpass, gstop=gstop)
+    
     #b_bp, a_bp = filters.design_chebyshev1_bandpass(bp_order, bp_rp, fs, passband=(4750, 4850))
     #b_bp, a_bp = design_passband_filter(fs=fs)
     xt = signal.lfilter(b_bp, a_bp, x_mod)  # Transmitted signal

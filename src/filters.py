@@ -65,35 +65,34 @@ def design_chebyshev1_lowpass(
     b, a = cheby1(order, rp, Wn, btype='low', analog=False, output='ba')
     return b, a
 
-def design_passband_filter(wp=[4750.0, 4850.0], ws=[4700.0, 4900.0], gpass=2, gstop=40, fs=48000.0):
+def design_passband_filter(wp=[4750.0, 4850.0], ws=[4700.0, 4900.0], gpass=0.5, gstop=40.0, fs=48000.0):
     nyquist = fs / 2.0
     wp_n = np.array(wp) / nyquist
     ws_n = np.array(ws) / nyquist
     
     # Design filter
-    b, a = iirdesign(
+    sos = iirdesign(
         wp_n,
         ws_n,
         gpass,
         gstop,
         analog=False,
         ftype="cheby1",
-        output="ba"
+        output="sos"
     )
-    return b, a
+    return sos
 
 
-
-def design_lowpass_filter(wp = 50, ws = 75, gpass = 2, gstop = 40, fs = 48000.0):
+def design_lowpass_filter(wp = 50, ws = 75, gpass = 0.5, gstop = 40, fs = 48000.0):
     nyquist = fs / 2.0
     wp_n = wp/nyquist
     ws_n = ws/nyquist
-    b, a = iirdesign(wp_n,
+    sos = iirdesign(wp_n,
                      ws_n,
                      gpass,
                      gstop,
                      analog=False,
                      ftype="cheby1",
-                     output="ba",
+                     output="sos",
                      )
-    return b, a
+    return sos
