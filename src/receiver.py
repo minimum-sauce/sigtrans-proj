@@ -3,6 +3,7 @@
 
 import numpy as np
 import sounddevice as sd
+from matplotlib import pyplot as plt
 from scipy import signal
 import wcslib as wcs
 from filters import design_passband_filter, design_lowpass_filter
@@ -32,11 +33,11 @@ def main():
     #lp_rp = 0.2
     wp = np.array([4750.0, 4850.0])
     ws = np.array([4700.0, 4900.0])
-    gpass = 0.5
-    gstop = 40
+    gpass = 0.3
+    gstop = 60
 
     # Decide how long to record. For example, 2 seconds:
-    record_time = 10.0
+    record_time = 7.0
 
     # ---------------------- (B) Record Audio ---------------------------------
     print(f"Recording for {record_time} seconds ...")
@@ -58,20 +59,34 @@ def main():
 
     # --------------------- (D) IQ Demodulation -------------------------------
     n_r = np.arange(len(yr_f))
-    yI_d = yr_f * np.cos(2.0 * np.pi * fc * n_r / fs)
-    yQ_d = -1 * yr_f * np.sin(2.0 * np.pi * fc * n_r / fs)
+    print("n_r: ", len(n_r))
+    yI_d = yr_f * np.sin(2.0 * np.pi * fc * n_r / fs)
+    yQ_d = -1 * yr_f * np.cos(2.0 * np.pi * fc * n_r / fs)
 
     # --------------------- (E) Lowpass Filter Each Branch --------------------
     passband = 50     # pass up to ~50 Hz in baseband
     stopband = 75      # stopband starts at ~70 Hz
 
     sos_lp = design_lowpass_filter(passband, stopband, gpass, gstop, fs)
-    yI_b = signal.sosfilt(sos_lp, yI_d)
-    yQ_b = signal.sosfilt(sos_lp, yQ_d)
+    yI_b = np.array(signal.sosfilt(sos_lp, yI_d)) # In-phase signal
+    yQ_b = np.array(signal.sosfilt(sos_lp, yQ_d)) # Quadrature-phase signal
 
     # Combine into complex baseband
     yb = yI_b + 1j * yQ_b
 
+    # Generate time array corresponding to n_r
+    t = n_r / fs  # Convert sample indices to time
+
+    # Plot filtered I and Q signals
+    plt.figure(figsize=(10, 6))
+    plt.plot(t, yI_b, label='Filtered In-phase (I)', color='blue')
+    plt.plot(t, yQ_b, label='Filtered Quadrature (Q)', color='orange')
+    plt.title('Filtered In-phase and Quadrature Signals')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Amplitude')
+    plt.legend()
+    plt.grid()
+    plt.show()
     # --------------------- (F) Decode Baseband -------------------------------
     br = wcs.decode_baseband_signal(np.abs(yb), np.angle(yb), Tb, fs)
     data_rx = wcs.decode_string(br)

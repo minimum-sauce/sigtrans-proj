@@ -63,7 +63,7 @@ def plot_filter_response(sos, fs=10000.0, passband=(4750, 4850), stopband=(4700,
     plt.xlabel("Frequency (Hz)")
     plt.ylabel("Magnitude (dB)")
     plt.xlim([4700, 4900])    # from 1 Hz up to Nyquist (22050 Hz if fs=44100)
-    plt.ylim([-60, 5])     # amplitude range
+    plt.ylim([-80, 5])     # amplitude range
     # plt.ylim([-60, 5])
     plt.grid(True, which='both')  # grid on both major & minor ticks
     plt.legend()
@@ -81,8 +81,8 @@ if __name__ == "__main__":
     fs = 10000.0
     wp = [4750.0, 4850.0]
     ws = [4700.0, 4900.0]
-    gpass = 0.5
-    gstop = 40
+    gpass = 0.2
+    gstop = 60
 
     sos = design_passband_filter(wp, ws, gpass, gstop, fs)
     # Plot its response

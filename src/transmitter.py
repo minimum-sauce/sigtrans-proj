@@ -40,8 +40,8 @@ def main():
         string_data = False
         data = str(args[1])
     else:
-        print('No valid input provided, defaulting to "Hello World!"')
-        data = "Hello World!"
+        data = "Hello World!"#"Here is a longer sentence to send over"# "Hello World!"
+        print('No valid input provided, defaulting to "{}"'.format(data))
 
     # -------------------- (C) Encode into Baseband --------------------------
     # 1. Convert string -> bits
@@ -56,7 +56,7 @@ def main():
     # -------------------- (D) Up-Convert & Bandpass Filter -------------------
     n = np.arange(len(xb))
     x_mod = xb * np.cos(2.0 * np.pi * fc * n / fs)   # Real up-conversion
-    sos = design_passband_filter()
+    sos = design_passband_filter(gpass=0.3, gstop=60)
     x_tx = signal.sosfilt(sos, x_mod)         # Final transmit signal
 
     # ---------------------- (E) Play Out via Sounddevice ---------------------

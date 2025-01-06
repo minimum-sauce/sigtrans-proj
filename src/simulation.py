@@ -47,7 +47,7 @@ def simulation():
         data = str(args[1])
     else:
         print('Warning: No valid input, using defaults.', file=sys.stderr)
-        data = "Hello World!"
+        data = "Hello World!"#"this Is  A long sentence with some different type of letters. There is no Turning back! Are you alright?" #"Hello World!"
 
     # -------------------------------------------------------------------------
     # (B) Convert the input string -> bits -> baseband signal
@@ -63,24 +63,23 @@ def simulation():
     # (B1) Baseband-only decode test (NO channel, NO filters):
     #      Convert xb to complex so decode_baseband_signal sees phase flips.
     # -------------------------------------------------------------------------
-    yr_c = xb#.astype(np.complex128)  # Make it complex: +1 -> phase=0, -1 -> phase=π
-
-    # Decode baseband
-    br = wcs.decode_baseband_signal(np.abs(yr_c), np.angle(yr_c), Tb, fs)
-    data_rx = wcs.decode_string(br)
+    # yr_c = xb#.astype(np.complex128)  # Make it complex: +1 -> phase=0, -1 -> phase=π
+    # # Decode baseband
+    # br = wcs.decode_baseband_signal(np.abs(yr_c), np.angle(yr_c), Tb, fs)
+    # data_rx = wcs.decode_string(br)
 
     # -------------------------------------------------------------------------
     # (C) TRANSMITTER: Modulate & Band-limit
     # -------------------------------------------------------------------------
     # 1) IQ up-conversion at carrier = 4.8 kHz
     n = np.arange(len(xb))
-    x_mod = xb * np.cos(2.0 * np.pi * fc * n / fs)
+    x_mod = xb * np.sin(2.0 * np.pi * fc * n / fs)
 
     # 2) Bandpass filter
     wp_bp = [4750.0, 4850.0]
     ws_bp = [4700.0, 4900.0]
-    gpass = 0.5
-    gstop = 40
+    gpass = 0.2
+    gstop = 60
 
     sos_bp = filters.design_passband_filter(wp_bp, ws_bp, gpass, gstop, fs)
     #plot_filter_response(b_bp, a_bp, fs, passband=wp_bp, stopband=ws_bp, gpass=gpass, gstop=gstop)
@@ -104,8 +103,8 @@ def simulation():
 
     # IQ demod
     n_r = np.arange(len(yr_f))
-    yI_d = np.array(yr_f) * np.cos(2.0 * np.pi * fc * n_r / fs)
-    yQ_d = -np.array(yr_f) * np.sin(2.0 * np.pi * fc * n_r / fs)
+    yI_d = np.array(yr_f) * np.sin(2.0 * np.pi * fc * n_r / fs)
+    yQ_d = -np.array(yr_f) * np.cos(2.0 * np.pi * fc * n_r / fs)
 
     # Lowpass each branch
     wp_lp = 30
@@ -118,6 +117,20 @@ def simulation():
     # Form complex baseband
     yb = np.array(yI_b) + 1j * np.array(yQ_b)
 
+
+    # Generate time array corresponding to n_r
+    t = n_r / fs  # Convert sample indices to time
+
+    # Plot filtered I and Q signals
+    plt.figure(figsize=(10, 6))
+    plt.plot(t, yI_b, label='Filtered In-phase (I)', color='blue')
+    plt.plot(t, yQ_b, label='Filtered Quadrature (Q)', color='orange')
+    plt.title('Filtered In-phase and Quadrature Signals')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Amplitude')
+    plt.legend()
+    plt.grid()
+    plt.show()
     # Decode baseband -> bits -> text
     br = wcs.decode_baseband_signal(np.abs(yb), np.angle(yb), Tb, fs)
 
