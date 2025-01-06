@@ -6,7 +6,7 @@ import numpy as np
 from scipy import signal
 import sounddevice as sd
 import wcslib as wcs
-
+from filters import design_passband_filter, design_lowpass_filter
 ###############################################################################
 # 1. Filter-Design Functions
 ###############################################################################
@@ -14,8 +14,8 @@ def design_chebyshev1_bandpass(order, rp, fs, passband=(4750, 4850)):
     nyquist = fs / 2
     f1, f2 = passband
     Wn = [f1 / nyquist, f2 / nyquist]
-    b, a = signal.cheby1(order, rp, Wn, btype='band', analog=False, output='ba')
-    return b, a
+    sos = signal.cheby1(order, rp, Wn, btype='band', analog=False, output='sos')
+    return sos
 
 ###############################################################################
 # 2. Main Transmitter Program
@@ -56,8 +56,8 @@ def main():
     # -------------------- (D) Up-Convert & Bandpass Filter -------------------
     n = np.arange(len(xb))
     x_mod = xb * np.cos(2.0 * np.pi * fc * n / fs)   # Real up-conversion
-    b_bp, a_bp = design_chebyshev1_bandpass(bp_order, bp_rp, fs, passband)
-    x_tx = signal.lfilter(b_bp, a_bp, x_mod)         # Final transmit signal
+    sos = design_chebyshev1_bandpass(bp_order, bp_rp, fs, passband)
+    x_tx = signal.sosfilt(sos, x_mod)         # Final transmit signal
 
     # ---------------------- (E) Play Out via Sounddevice ---------------------
     print("Transmitting your signal ...")
