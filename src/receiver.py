@@ -5,31 +5,35 @@ import numpy as np
 import sounddevice as sd
 from scipy import signal
 import wcslib as wcs
+from filters import design_passband_filter, design_lowpass_filter
 
-def design_chebyshev1_bandpass(order, rp, fs, passband=(4750, 4850)):
-    nyquist = fs / 2
-    f1, f2 = passband
-    Wn = [f1 / nyquist, f2 / nyquist]
-    sos = signal.cheby1(order, rp, Wn, btype='band', analog=False, output='sos')
-    return sos
-
-def design_chebyshev1_lowpass(order, rp, fs, cutoff=50):
-    nyquist = fs / 2
-    Wn = cutoff / nyquist
-    sos = signal.cheby1(order, rp, Wn, btype='low', analog=False, output='sos')
-    return sos
+# def design_chebyshev1_bandpass(order, rp, fs, passband=(4750, 4850)):
+#     nyquist = fs / 2
+#     f1, f2 = passband
+#     Wn = [f1 / nyquist, f2 / nyquist]
+#     sos = signal.cheby1(order, rp, Wn, btype='band', analog=False, output='sos')
+#     return sos
+#
+# def design_chebyshev1_lowpass(order, rp, fs, cutoff=50):
+#     nyquist = fs / 2
+#     Wn = cutoff / nyquist
+#     sos = signal.cheby1(order, rp, Wn, btype='low', analog=False, output='sos')
+#     return sos
 
 def main():
     # -------------------------- (A) Parameters -------------------------------
     fs = 48000           # Must match transmitter
     Tb = 0.04            # Must match transmitter
     fc = 4800
-    bp_order = 5
-    bp_rp = 1.0
-    passband = (4750, 4850)
-    lp_order = 5
-    lp_rp = 1.0
-    cutoff = 50
+    #bp_order = 5
+    #bp_rp = 0.2
+    #passband = (4750, 4850)
+    #lp_order = 5
+    #lp_rp = 0.2
+    wp = np.array([4750.0, 4850.0])
+    ws = np.array([4700.0, 4900.0])
+    gpass = 0.5
+    gstop = 40
 
     # Decide how long to record. For example, 2 seconds:
     record_time = 10.0
@@ -47,16 +51,21 @@ def main():
     y_rec = y_rec.flatten()
 
     # --------------------- (C) Bandpass Filter (Receiver) --------------------
-    sos_bp = design_chebyshev1_bandpass(bp_order, bp_rp, fs, passband)
+
+    sos_bp = design_passband_filter(wp, ws, gpass, gstop, fs)
+    #sos_bp = design_passband_filter(bp_order, bp_rp, fs, passband)
     yr_f = signal.sosfilt(sos_bp, y_rec)
 
     # --------------------- (D) IQ Demodulation -------------------------------
     n_r = np.arange(len(yr_f))
     yI_d = yr_f * np.cos(2.0 * np.pi * fc * n_r / fs)
-    yQ_d = -yr_f * np.sin(2.0 * np.pi * fc * n_r / fs)
+    yQ_d = -1 * yr_f * np.sin(2.0 * np.pi * fc * n_r / fs)
 
     # --------------------- (E) Lowpass Filter Each Branch --------------------
-    sos_lp = design_chebyshev1_lowpass(lp_order, lp_rp, fs, cutoff)
+    passband = 50     # pass up to ~50 Hz in baseband
+    stopband = 75      # stopband starts at ~70 Hz
+
+    sos_lp = design_lowpass_filter(passband, stopband, gpass, gstop, fs)
     yI_b = signal.sosfilt(sos_lp, yI_d)
     yQ_b = signal.sosfilt(sos_lp, yQ_d)
 
