@@ -21,11 +21,11 @@ import wcslib as wcs
 import filters
 from plotfilter import plot_filter_response
 
-def simulation():
+def simulation(data):
     # -------------------------------------------------------------------------
     # (A) Define your main system parameters
     # -------------------------------------------------------------------------
-    fs = 48000          # Sampling rate (e.g., 48 kHz)
+    fs = 38400          # Sampling rate (e.g., 48 kHz)
     Tb = 0.04           # Symbol width in seconds (example)
     fc = 4800           # Carrier frequency in Hz
     channel_id = 19     # Example channel ID; adjust if needed.
@@ -36,18 +36,19 @@ def simulation():
     lp_order = 5
     lp_rp    = 1.0
     cutoff   = 50
-
-    # Detect input or set defaults
     string_data = True
-    args = sys.argv[1:]
-    if len(args) == 1:
-        data = str(args[0])
-    elif len(args) == 2 and args[0] == '-b':
-        string_data = False
-        data = str(args[1])
-    else:
-        print('Warning: No valid input, using defaults.', file=sys.stderr)
-        data = "Hello World!"#"this Is  A long sentence with some different type of letters. There is no Turning back! Are you alright?" #"Hello World!"
+
+    # # Detect input or set defaults
+    # string_data = True
+    # args = sys.argv[1:]
+    # if len(args) == 1:
+    #     data = str(args[0])
+    # elif len(args) == 2 and args[0] == '-b':
+    #     string_data = False
+    #     data = str(args[1])
+    # else:
+    #print('Warning: No valid input, using defaults.', file=sys.stderr)
+    #data = "this Is  A long sentence with some different type of letters. There is no Turning back! Are you alright?" #"Hello World!"
 
     # -------------------------------------------------------------------------
     # (B) Convert the input string -> bits -> baseband signal
@@ -95,6 +96,7 @@ def simulation():
     # For now, bypass or keep the channel
     yr = wcs.simulate_channel(xt, fs, channel_id)
 
+
     # -------------------------------------------------------------------------
     # (E) RECEIVER: Band-limiting -> IQ demod -> Lowpass -> Decode
     # -------------------------------------------------------------------------
@@ -118,42 +120,107 @@ def simulation():
     yb = np.array(yI_b) + 1j * np.array(yQ_b)
 
 
-    # Generate time array corresponding to n_r
-    t = n_r / fs  # Convert sample indices to time
-
-    # Plot filtered I and Q signals
-    plt.figure(figsize=(10, 6))
-    plt.plot(t, yI_b, label='Filtered In-phase (I)', color='blue')
-    plt.plot(t, yQ_b, label='Filtered Quadrature (Q)', color='orange')
-    plt.title('Filtered In-phase and Quadrature Signals')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Amplitude')
-    plt.legend()
-    plt.grid()
-    plt.show()
     # Decode baseband -> bits -> text
     br = wcs.decode_baseband_signal(np.abs(yb), np.angle(yb), Tb, fs)
 
     data_rx = wcs.decode_string(br)
     # Code for calculating bit error rate
-    char_errors = 0
-    min_len = min(len(data), len(data_rx))
+    # char_errors = 0
+    # min_len = min(len(data), len(data_rx))
+    #
+    # # Compare up to the shorter length
+    # for i in range(min_len):
+    #     if data[i] != data_rx[i]:
+    #         char_errors += 1
+    #
+    # # If there's a length mismatch, count the extra characters as errors too
+    # char_errors += abs(len(data) - len(data_rx))
+    #
+    # # Compute a "character error rate" by dividing by the length of the original data
+    # total_chars = len(data)
+    # char_error_rate = char_errors / total_chars if total_chars > 0 else 0.0
+    # Code for calculating bit error rate
+    bit_errors = 0
+
+    # Convert data and data_rx to bit sequences
+    data_bits = ''.join(format(ord(c), '08b') for c in data)   # Convert each character to 8-bit binary
+    data_rx_bits = ''.join(format(ord(c), '08b') for c in data_rx)
+
+    # Find the minimum length of the bit sequences
+    min_len = min(len(data_bits), len(data_rx_bits))
 
     # Compare up to the shorter length
     for i in range(min_len):
-        if data[i] != data_rx[i]:
-            char_errors += 1
+        if data_bits[i] != data_rx_bits[i]:
+            bit_errors += 1
 
-    # If there's a length mismatch, count the extra characters as errors too
-    char_errors += abs(len(data) - len(data_rx))
+    # Count extra bits as errors if the lengths are different
+    bit_errors += abs(len(data_bits) - len(data_rx_bits))
 
-    # Compute a "character error rate" by dividing by the length of the original data
-    total_chars = len(data)
-    char_error_rate = char_errors / total_chars if total_chars > 0 else 0.0
+    # Compute a "bit error rate" by dividing by the total number of bits in the original data
+    total_bits = len(data_bits)
+    bit_error_rate = bit_errors / total_bits if total_bits > 0 else 0.0
 
-    print(f"Char errors: {char_errors}, total chars: {total_chars}, CER: {char_error_rate:.6f}")
-    print('Received: ' + data_rx)
+    # print(f"bit errors: {bit_errors}, total bit length: {total_bits}, BER: {bit_error_rate:.6f}")
+    # print('Received: ' + data_rx)
+    return (bit_errors, total_bits, bit_error_rate)
 
 
 if __name__ == "__main__":
-    simulation()
+    data_strings = [
+        "Hello World!",
+        "if correct: Felix == Happy",
+        "some shorter sentance!)(#/)",
+        "Transverign 10923 Kronor into your bankaccount is banger! #$%",
+        "this Is  A long sentence with some different type of letters. There is no Turning back! Are you alright?"
+    ]
+
+    iterations = 50
+    grand_total_bit_errors = 0
+    grand_total_bits = 0
+    grand_total_correct = 0
+    grand_total_transmissions = 0
+
+    print("Starting simulation...\n")
+
+    for data in data_strings:
+        print(f"Testing string: \"{data[:50]}{'...' if len(data) > 50 else ''}\"")
+        total_bit_errors = 0
+        total_bits = 0
+        max_ber = 0
+        correct = 0
+        min_ber = float('inf')
+        for _ in range(iterations):
+            b_err, b_len, ber = simulation(data)
+            if b_err == 0:
+                correct += 1
+            total_bit_errors += b_err
+            total_bits += b_len
+            max_ber = max(max_ber, ber)
+            min_ber = min(min_ber, ber)
+        avg_ber = total_bit_errors / total_bits if total_bits > 0 else 0.0
+
+        # Accumulate global totals
+        grand_total_bit_errors += total_bit_errors
+        grand_total_bits += total_bits
+        grand_total_correct += correct 
+        grand_total_transmissions += iterations
+
+        # Display results for this string
+        print(f"total nr of correct transmissions: {correct}/{iterations}")
+        print(f"Total Bit Errors: {total_bit_errors}")
+        print(f"Total Bits Transmitted: {total_bits}")
+        print(f"Average BER: {avg_ber*100:.6f}%")
+        print(f"Max BER: {max_ber*100:.6f}%")
+        print(f"Min BER: {min_ber*100:.6f}%")
+        print("-" * 50)
+
+    # Compute and display the overall BER
+    grand_total_ber = grand_total_bit_errors / grand_total_bits if grand_total_bits > 0 else 0.0
+    print("\nSimulation completed.")
+    print(f"Overall Total Bit Errors: {grand_total_bit_errors}")
+    print(f"Overall Total Bits Transmitted: {grand_total_bits}")
+    print(f"Overall Total BER: {grand_total_ber*100:.6f}%")
+    print(f"total nr of correct transmissions: {grand_total_correct}/{grand_total_transmissions}")
+
+
