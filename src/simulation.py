@@ -14,12 +14,14 @@ $ python3 simulation.py -b 010010000110100100100001
 """
 
 import sys 
+import random
+import string
 import numpy as np
 from scipy import signal
 import matplotlib.pyplot as plt
 import wcslib as wcs
 import filters
-from plotfilter import plot_filter_response
+#from plotfilter import plot_filter_response
 
 def simulation(data):
     # -------------------------------------------------------------------------
@@ -166,61 +168,82 @@ def simulation(data):
     return (bit_errors, total_bits, bit_error_rate)
 
 
-if __name__ == "__main__":
-    data_strings = [
-        "Hello World!",
-        "if correct: Felix == Happy",
-        "some shorter sentance!)(#/)",
-        "Transverign 10923 Kronor into your bankaccount is banger! #$%",
-        "this Is  A long sentence with some different type of letters. There is no Turning back! Are you alright?"
-    ]
+def eval_transmissions(data, iterations):
+    print(f"Testing string: \"{data[:50]}{'...' if len(data) > 50 else ''}\"")
+    ber_results = []
+    packet_results = []
+    packet_results = []  # Will store 1 if entire packet was correct, else 0
+    ber_results = []     # Will store CER for each run
+    max_ber = 0
+    min_ber = float('inf')
 
-    iterations = 50
-    grand_total_bit_errors = 0
-    grand_total_bits = 0
-    grand_total_correct = 0
-    grand_total_transmissions = 0
+    for _ in range(iterations):
+        b_err, b_len, ber = simulation(data)
+        packet_results.append(1) if b_err == 0 else packet_results.append(0)
+        # max_ber = max(max_ber, ber)
+        # min_ber = min(min_ber, ber)
+        # Compute CER for this run
+        ber_results.append(ber)
+
+
+    # Convert packet correctness into accuracy (%) and compute mean/std
+    packet_correct_array = np.array(packet_results, dtype=float)
+    packet_accuracy_mean = packet_correct_array.mean() * 100.0
+    packet_accuracy_std  = packet_correct_array.std(ddof=1) * 100.0  # ddof=1 => sample std
+
+    # Compute mean and std for CER
+    ber_array = np.array(ber_results, dtype=float)
+    ber_mean = ber_array.mean()
+    ber_std  = ber_array.std(ddof=1)  # sample std
+
+    return (packet_accuracy_mean, packet_accuracy_std, ber_mean, ber_std)
+
+
+
+if __name__ == "__main__":
+    nr_of_words_to_test = 40
+    iterations = 40
+
+    accuracies_mean = []
+    accuracies_std = []
+    bers_mean = []
+    bers_std = []
 
     print("Starting simulation...\n")
 
-    for data in data_strings:
-        print(f"Testing string: \"{data[:50]}{'...' if len(data) > 50 else ''}\"")
-        total_bit_errors = 0
-        total_bits = 0
-        max_ber = 0
-        correct = 0
-        min_ber = float('inf')
-        for _ in range(iterations):
-            b_err, b_len, ber = simulation(data)
-            if b_err == 0:
-                correct += 1
-            total_bit_errors += b_err
-            total_bits += b_len
-            max_ber = max(max_ber, ber)
-            min_ber = min(min_ber, ber)
-        avg_ber = total_bit_errors / total_bits if total_bits > 0 else 0.0
+    lengths = list(range(1, nr_of_words_to_test, 2))
+    for length in lengths:
+        data = ''.join(random.choice(string.ascii_lowercase) for _ in range(length))
+        (acc_mean, acc_std, ber_mean, ber_std) = eval_transmissions(data, iterations)
+        accuracies_mean.append(acc_mean)
+        accuracies_std.append(acc_std)
+        bers_mean.append(ber_mean)
+        bers_std.append(ber_std)
+        print(ber_std)
 
-        # Accumulate global totals
-        grand_total_bit_errors += total_bit_errors
-        grand_total_bits += total_bits
-        grand_total_correct += correct 
-        grand_total_transmissions += iterations
 
-        # Display results for this string
-        print(f"total nr of correct transmissions: {correct}/{iterations}")
-        print(f"Total Bit Errors: {total_bit_errors}")
-        print(f"Total Bits Transmitted: {total_bits}")
-        print(f"Average BER: {avg_ber*100:.6f}%")
-        print(f"Max BER: {max_ber*100:.6f}%")
-        print(f"Min BER: {min_ber*100:.6f}%")
-        print("-" * 50)
+    plt.figure(figsize=(9, 4))
+    # Subplot 1: Packet Accuracy
+    plt.subplot(1, 2, 1)
+    plt.errorbar(lengths, accuracies_mean, yerr=accuracies_std, fmt='o-', capsize=5)
+    plt.ylim(0, 100)
+    plt.xticks(lengths)
+    plt.xlabel("Word Length")
+    plt.ylabel("Accuracy (%)")
+    plt.title("Packet Accuracy vs. Word Length")
+    plt.grid(True)
 
-    # Compute and display the overall BER
-    grand_total_ber = grand_total_bit_errors / grand_total_bits if grand_total_bits > 0 else 0.0
-    print("\nSimulation completed.")
-    print(f"Overall Total Bit Errors: {grand_total_bit_errors}")
-    print(f"Overall Total Bits Transmitted: {grand_total_bits}")
-    print(f"Overall Total BER: {grand_total_ber*100:.6f}%")
-    print(f"total nr of correct transmissions: {grand_total_correct}/{grand_total_transmissions}")
+    # Subplot 2: CER
+    plt.subplot(1, 2, 2)
+    plt.errorbar(lengths, bers_mean, yerr=bers_std, fmt='o-', capsize=5, color='red')
+    plt.xticks(lengths)
+    plt.xlabel("Word Length")
+    plt.ylabel("CER")
+    plt.title("Character Error Rate vs. Word Length")
+    plt.grid(True)
+    plt.ylim(bottom=0)
 
+    plt.tight_layout()
+    plt.show()
+    #plt.savefig("my_plot.png", dpi=300, bbox_inches="tight")
 

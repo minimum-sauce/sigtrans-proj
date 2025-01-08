@@ -77,7 +77,7 @@ def design_passband_filter(wp=[4750.0, 4850.0], ws=[4700.0, 4900.0], gpass=0.5, 
         gpass,
         gstop,
         analog=False,
-        ftype="ellip",
+        ftype="cheby1",
         output="sos"
     )
     return sos
@@ -92,7 +92,7 @@ def design_lowpass_filter(wp = 50, ws = 75, gpass = 0.5, gstop = 40, fs = 48000.
                      gpass,
                      gstop,
                      analog=False,
-                     ftype="ellip",
+                     ftype="cheby1",
                      output="sos",
                      )
     return sos

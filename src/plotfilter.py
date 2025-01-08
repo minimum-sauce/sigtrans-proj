@@ -5,11 +5,13 @@ from scipy.signal import sosfreqz
 
 from filters import *
 
+# font = {'family' : 'normal',
+#   #      'weight' : 'bold',
+#         'size'   : 18}
+# plt.rc('font', **font)
+#
 
-
-
-
-def plot_lowpass_filter_response_logscale(sos, fs=10000.0, passband=50, stopband=70, rp=1.0, As=40):
+def plot_lowpass_filter_response_logscale(sos, fs=10000.0, passband=50, stopband=70, rp=0.3, As=60):
     """
     Plots the frequency response of the filter on a *logarithmic* frequency scale.
     passband and stopband are just used for reference lines.
@@ -33,7 +35,7 @@ def plot_lowpass_filter_response_logscale(sos, fs=10000.0, passband=50, stopband
     plt.ylabel("Magnitude (dB)")
 
     # Limit the frequency range to avoid log(0):
-    plt.xlim([0, 100])    # from 1 Hz up to Nyquist (22050 Hz if fs=44100)
+    plt.xlim([0, 150])    # from 1 Hz up to Nyquist (22050 Hz if fs=44100)
     plt.ylim([-80, 5])     # amplitude range
     plt.grid(True, which='both')  # grid on both major & minor ticks
     plt.legend()
@@ -43,7 +45,7 @@ def plot_lowpass_filter_response_logscale(sos, fs=10000.0, passband=50, stopband
     Plots the frequency response of the filter on a linear frequency scale.
     Also draws vertical lines for the passband edges.
 """
-def plot_filter_response(sos, fs=10000.0, passband=(4750, 4850), stopband=(4700, 4900), title="Filter Response", gpass = 1.0, gstop = 40.0):
+def plot_filter_response(sos, fs=10000.0, passband=(4750, 4850), stopband=(4700, 4900), title="Filter Response", gpass = 0.3, gstop = 60.0):
     w, h = sosfreqz(sos, worN=2048)  # Compute frequency response
     freqs = w * fs / (2.0 * np.pi)  # Convert rad/sample to Hz
     plt.figure(figsize=(8, 5))
@@ -60,9 +62,9 @@ def plot_filter_response(sos, fs=10000.0, passband=(4750, 4850), stopband=(4700,
     plt.axhline(-gstop, color='blue', linestyle='--', label='Stopband Attenuation')
 
     plt.title(title)
-    plt.xlabel("Frequency (Hz)")
+    plt.title("Chebyshev I Bandpass Filter Response")
     plt.ylabel("Magnitude (dB)")
-    plt.xlim([4700, 4900])    # from 1 Hz up to Nyquist (22050 Hz if fs=44100)
+    plt.xlim([4600, 5000])    # from 1 Hz up to Nyquist (22050 Hz if fs=44100)
     plt.ylim([-80, 5])     # amplitude range
     # plt.ylim([-60, 5])
     plt.grid(True, which='both')  # grid on both major & minor ticks
@@ -94,7 +96,7 @@ if __name__ == "__main__":
     # Lowpass filter example
     #---------------------------------------------------------------------------
     passband = 50     # pass up to ~50 Hz in baseband
-    stopband = 75      # stopband starts at ~70 Hz
+    stopband = 100      # stopband starts at ~70 Hz
 
     sos = design_lowpass_filter(passband, stopband, gpass, gstop, fs)
     plot_lowpass_filter_response_logscale(sos, fs, passband=passband, stopband=stopband, rp=gpass, As=gstop)

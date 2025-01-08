@@ -25,13 +25,11 @@ def main():
     fs = 48000           # Audio sampling rate in Hz
     Tb = 0.04            # Symbol width (seconds)
     fc = 4800            # Carrier frequency in Hz
-    bp_order = 5         # Bandpass filter order
-    bp_rp = 1.0          # Passband ripple (dB)
-    passband = (4750, 4850)
 
     # ---------------------- (B) Get Input from Command Line ------------------
     # E.g., run: python transmitter.py "Hello World!"
     # or       : python transmitter.py -b 0100100001101
+
     string_data = True
     args = sys.argv[1:]
     if len(args) == 1:
@@ -40,7 +38,7 @@ def main():
         string_data = False
         data = str(args[1])
     else:
-        data = "Hello World!"#"Here is a longer sentence to send over"# "Hello World!"
+        data = "Hello world@"#ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ"# "Hello World, for gibb"#"Here is a longer sentence to send over"# "Hello World!"
         print('No valid input provided, defaulting to "{}"'.format(data))
 
     # -------------------- (C) Encode into Baseband --------------------------
@@ -56,7 +54,7 @@ def main():
     # -------------------- (D) Up-Convert & Bandpass Filter -------------------
     n = np.arange(len(xb))
     x_mod = xb * np.cos(2.0 * np.pi * fc * n / fs)   # Real up-conversion
-    sos = design_passband_filter(gpass=0.3, gstop=60)
+    sos = design_passband_filter(gpass=0.2, gstop=60)
     x_tx = signal.sosfilt(sos, x_mod)         # Final transmit signal
 
     # ---------------------- (E) Play Out via Sounddevice ---------------------
