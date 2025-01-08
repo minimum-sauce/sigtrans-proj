@@ -33,13 +33,13 @@ def main():
     #lp_rp = 0.2
     wp = np.array([4750.0, 4850.0])
     ws = np.array([4700.0, 4900.0])
-    wp = np.array([4300.0, 4500.0])
-    ws = np.array([4250.0, 4550.0])
+    # wp = np.array([4300.0, 4500.0])
+    # ws = np.array([4250.0, 4550.0])
     gpass = 0.3
     gstop = 60
 
     # Decide how long to record. For example, 2 seconds:
-    record_time = 18.0
+    record_time = 7.0
 
     # ---------------------- (B) Record Audio ---------------------------------
     print(f"Recording for {record_time} seconds ...")
@@ -66,7 +66,7 @@ def main():
 
     # --------------------- (E) Lowpass Filter Each Branch --------------------
     passband = 50     # pass up to ~50 Hz in baseband
-    stopband = 75      # stopband starts at ~70 Hz
+    stopband = 100      # stopband starts at ~70 Hz
 
     sos_lp = design_lowpass_filter(passband, stopband, gpass, gstop, fs)
     yI_b = np.array(signal.sosfilt(sos_lp, yI_d)) # In-phase signal
@@ -79,18 +79,49 @@ def main():
     data_rx = wcs.decode_string(br)
     print("Received message:", data_rx)
 
-    # Generate time array corresponding to n_r
-    t = n_r / fs  # Convert sample indices to time
 
-    # Plot filtered I and Q signals
-    plt.figure(figsize=(10, 6))
-    plt.plot(t, yI_b, label='Filtered In-phase (I)', color='blue')
-    plt.plot(t, yQ_b, label='Filtered Quadrature (Q)', color='orange')
-    plt.title('Filtered In-phase and Quadrature Signals')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Amplitude')
-    plt.legend()
-    plt.grid()
+    # Create a figure with 2 rows and 2 columns
+    fig, axs = plt.subplots(2, 2, figsize=(12, 8))  # 2 rows, 2 columns
+
+    # Plot y_rec (raw received signal)
+    t = np.arange(len(y_rec))
+    axs[0, 0].plot(t, y_rec, label='$y_{rec}$ (Raw Signal)', color='blue')
+    axs[0, 0].set_title('Raw Signal')
+    axs[0, 0].set_xlabel('Time (s)')
+    axs[0, 0].set_ylabel('Amplitude')
+    axs[0, 0].legend()
+    axs[0, 0].grid()
+
+    # Plot yr_f (filtered signal)
+    t = n_r / fs  # Convert sample indices to time
+    axs[0, 1].plot(t, yr_f, label='$y_{r_f}$ (Filtered Signal)', color='orange')
+    axs[0, 1].set_title('Filtered Signal')
+    axs[0, 1].set_xlabel('Time (s)')
+    axs[0, 1].set_ylabel('Amplitude')
+    axs[0, 1].legend()
+    axs[0, 1].grid()
+
+    # Plot the angle of the complex baseband signal yb
+    axs[1, 0].plot(t, np.angle(yb), label='Angle of $y_b$', color='green')
+    axs[1, 0].set_title('Angle of the Complex Baseband Signal ($y_b$)')
+    axs[1, 0].set_xlabel('Time (s)')
+    axs[1, 0].set_ylabel('Phase Angle (radians)')
+    axs[1, 0].grid()
+    axs[1, 0].legend()
+
+    # Plot filtered In-phase and Quadrature-phase signals
+    axs[1, 1].plot(t, yI_b, label='Filtered In-phase (I)', color='blue')
+    axs[1, 1].plot(t, yQ_b, label='Filtered Quadrature (Q)', color='orange')
+    axs[1, 1].set_title('Filtered In-phase and Quadrature Signals')
+    axs[1, 1].set_xlabel('Time (s)')
+    axs[1, 1].set_ylabel('Amplitude')
+    axs[1, 1].grid()
+    axs[1, 1].legend()
+
+    # Adjust layout to avoid overlap between subplots
+    plt.tight_layout()
+
+    # Show the plot
     plt.show()
     # --------------------- (F) Decode Baseband -------------------------------
 
